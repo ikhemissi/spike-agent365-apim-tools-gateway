@@ -1,0 +1,6 @@
+node_modules
+.next
+*.tsbuildinfo
+# Local settings hold the LiteLLM key: never commit them.
+.env*
+!.env.example

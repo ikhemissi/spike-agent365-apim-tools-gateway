@@ -1,0 +1,23 @@
+[project]
+name = "spike-agent365-apim-tools-gateway"
+version = "0.1.0"
+description = "When an Azure API Management gateway is connected to Agent 365, what is actually governed: which calls a block stops and how fast, at what granularity, how new or changed MCP servers are noticed, with which identity and permissions, which controls we have in Agent 365, and with which audit records?"
+requires-python = ">=3.13"
+dependencies = [
+    "azure-identity>=1.27.0",
+    "openai>=3.42.0",
+    "python-dotenv>=1.2.1",
+]
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.1.0",
+    "ruff>=0.17.3",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"

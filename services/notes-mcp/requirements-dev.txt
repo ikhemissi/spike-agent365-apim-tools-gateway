@@ -1,0 +1,3 @@
+# Test tools only (not in the image): uv run --no-project --with-requirements requirements.txt --with-requirements requirements-dev.txt pytest
+pytest==9.2.0
+httpx==0.28.1

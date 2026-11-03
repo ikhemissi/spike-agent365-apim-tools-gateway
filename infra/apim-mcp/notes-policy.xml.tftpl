@@ -1,0 +1,26 @@
+<policies>
+  <inbound>
+    <base />
+    <validate-azure-ad-token tenant-id="${tenant_id}" header-name="Authorization" failed-validation-httpcode="401" failed-validation-error-message="A signed-in user's token for the AI gateway is required.">
+      <audiences>
+        <audience>${client_id}</audience>
+        <audience>api://${client_id}</audience>
+      </audiences>
+      <required-claims>
+        <claim name="scp" match="any" separator=" ">
+          <value>${scope}</value>
+        </claim>
+      </required-claims>
+    </validate-azure-ad-token>
+    <authentication-managed-identity resource="${notes_audience}" />
+  </inbound>
+  <backend>
+    <base />
+  </backend>
+  <outbound>
+    <base />
+  </outbound>
+  <on-error>
+    <base />
+  </on-error>
+</policies>

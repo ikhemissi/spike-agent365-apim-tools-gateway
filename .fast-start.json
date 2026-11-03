@@ -1,0 +1,30 @@
+{
+  "composition": "spike",
+  "source": {
+    "commit": "13fce2c4beb31456c297f9e1db217d93a872bd59",
+    "describe": "v0.2.0-11-g13fce2c",
+    "dirty": false
+  },
+  "generated_at": "2026-11-03T13:23:44+00:00",
+  "blocks": [
+    "azure-platform",
+    "foundry-model",
+    "apim-gateway",
+    "notes-mcp",
+    "chat-ui"
+  ],
+  "answers": {
+    "project_name": "spike-agent365-apim-tools-gateway",
+    "title": "Governing API Management MCP servers with Agent 365",
+    "question": "When an Azure API Management gateway is connected to Agent 365, what is actually governed: which calls a block stops and how fast, at what granularity, how new or changed MCP servers are noticed, with which identity and permissions, which controls we have in Agent 365, and with which audit records?",
+    "time_box": "2 days",
+    "azure_stack": false,
+    "litellm_gateway": false,
+    "apim_gateway": true,
+    "notes_mcp": true,
+    "chat_ui": true,
+    "environment": "spike-agent365-apim-tools-gateway",
+    "location": "francecentral",
+    "author": "Iheb Khemissi"
+  }
+}

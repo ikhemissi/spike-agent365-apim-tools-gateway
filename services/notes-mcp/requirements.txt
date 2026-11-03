@@ -1,0 +1,5 @@
+mcp==2.3.0
+uvicorn>=0.38,<1
+azure-data-tables>=12.7,<13
+azure-identity>=1.23,<2
+pyjwt[crypto]==2.15.1

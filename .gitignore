@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+.ipynb_checkpoints/
+.env
+.azure/
+.terraform/
+*.tfstate
+*.tfstate.*
+*.pem
+*.key
+*.pfx
+# Local files from fast-start, never committed
+.fast-start/
