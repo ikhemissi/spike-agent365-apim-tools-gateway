@@ -1,5 +1,6 @@
 # The spike's MCP servers in API Management: the notes MCP server (infra/notes-mcp) registered as an MCP API at
-# <gateway>/notes. azurerm cannot create MCP APIs, hence azapi, the only use of it here. What works (checked on
+# <gateway>/notes, and Microsoft Learn's public MCP server at <gateway>/learn (experiment 05: discovery of a server
+# added later; not offered to the chat). azurerm cannot create MCP APIs, hence azapi, the only use of it here. What works (checked on
 # Standard v2): a backend with the server's full URL, and an API of type "mcp" pointing at it with backendId and the
 # streamable transport, without endpoints. Agent 365 blocks it by setting the API's accessState; re-applying this
 # layer keeps that state (the bodies below never set it), but replacing the API would lose it.
@@ -9,6 +10,7 @@ data "azapi_client_config" "current" {}
 locals {
   service_id = "/subscriptions/${var.subscription_id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.ApiManagement/service/${var.apim_name}"
   notes_path = "notes"
+  learn_path = "learn"
 }
 
 resource "azapi_resource" "notes_backend" {
@@ -36,7 +38,7 @@ resource "azapi_resource" "notes_api" {
     properties = {
       type                 = "mcp"
       displayName          = "Team notes"
-      description          = "Read and add short team notes."
+      description          = "Read and add short team notes (changed while blocked, experiment 05)."
       path                 = local.notes_path
       protocols            = ["https"]
       backendId            = azapi_resource.notes_backend.name
@@ -55,11 +57,62 @@ resource "azapi_resource" "notes_policy" {
   body = {
     properties = {
       format = "rawxml"
-      value = templatefile("${path.module}/notes-policy.xml.tftpl", {
-        tenant_id      = data.azapi_client_config.current.tenant_id
-        client_id      = var.apim_gateway_client_id
-        scope          = "Gateway.Use"
-        notes_audience = var.notes_mcp_audience
+      value = templatefile("${path.module}/mcp-policy.xml.tftpl", {
+        tenant_id        = data.azapi_client_config.current.tenant_id
+        client_id        = var.apim_gateway_client_id
+        scope            = "Gateway.Use"
+        backend_audience = var.notes_mcp_audience
+      })
+    }
+  }
+}
+
+resource "azapi_resource" "learn_backend" {
+  type      = "Microsoft.ApiManagement/service/backends@2024-06-01-preview"
+  name      = "learn-mcp"
+  parent_id = local.service_id
+  body = {
+    properties = {
+      protocol = "http"
+      url      = "https://learn.microsoft.com/api/mcp"
+      tls      = { validateCertificateChain = true, validateCertificateName = true }
+      type     = "Single"
+    }
+  }
+}
+
+resource "azapi_resource" "learn_api" {
+  type                      = "Microsoft.ApiManagement/service/apis@2025-09-01-preview"
+  name                      = "learn"
+  parent_id                 = local.service_id
+  schema_validation_enabled = false # backendId, as for the notes API
+  body = {
+    properties = {
+      type                 = "mcp"
+      displayName          = "Microsoft Learn docs"
+      description          = "Search and read Microsoft's documentation."
+      path                 = local.learn_path
+      protocols            = ["https"]
+      backendId            = azapi_resource.learn_backend.name
+      subscriptionRequired = false
+      mcpProperties        = { transportType = "streamable" }
+    }
+  }
+}
+
+# The same user check as for the notes server; the public backend needs no identity.
+resource "azapi_resource" "learn_policy" {
+  type      = "Microsoft.ApiManagement/service/apis/policies@2024-06-01-preview"
+  name      = "policy"
+  parent_id = azapi_resource.learn_api.id
+  body = {
+    properties = {
+      format = "rawxml"
+      value = templatefile("${path.module}/mcp-policy.xml.tftpl", {
+        tenant_id        = data.azapi_client_config.current.tenant_id
+        client_id        = var.apim_gateway_client_id
+        scope            = "Gateway.Use"
+        backend_audience = ""
       })
     }
   }

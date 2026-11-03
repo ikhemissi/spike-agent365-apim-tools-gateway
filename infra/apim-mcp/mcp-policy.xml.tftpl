@@ -12,7 +12,9 @@
         </claim>
       </required-claims>
     </validate-azure-ad-token>
-    <authentication-managed-identity resource="${notes_audience}" />
+%{ if backend_audience != "" ~}
+    <authentication-managed-identity resource="${backend_audience}" />
+%{ endif ~}
   </inbound>
   <backend>
     <base />
