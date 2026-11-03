@@ -1,0 +1,95 @@
+probing https://apim-spike-agent365-apim-tools-gateway-671f7644.azure-api.net/notes every 5 s
+21:17:01  2.5s ok  tools=['add_note', 'count_notes', 'delete_note', 'list_notes']
+21:17:06  0.2s ok  tools=['add_note', 'count_notes', 'delete_note', 'list_notes']
+21:17:11  0.2s ok  tools=['add_note', 'count_notes', 'delete_note', 'list_notes']
+21:17:17  0.2s ok  tools=['add_note', 'count_notes', 'delete_note', 'list_notes']
+21:17:22  0.2s ok  tools=['add_note', 'count_notes', 'delete_note', 'list_notes']
+21:17:27  0.3s ok  tools=['add_note', 'count_notes', 'delete_note', 'list_notes']
+21:17:32  0.2s ok  tools=['add_note', 'count_notes', 'delete_note', 'list_notes']
+21:17:38  0.2s ok  tools=['add_note', 'count_notes', 'delete_note', 'list_notes']
+21:17:43  0.2s ok  tools=['add_note', 'count_notes', 'delete_note', 'list_notes']
+21:17:48  0.2s ok  tools=['add_note', 'count_notes', 'delete_note', 'list_notes']
+21:17:53  0.2s ok  tools=['add_note', 'count_notes', 'delete_note', 'list_notes']
+21:17:58  0.2s ok  tools=['add_note', 'count_notes', 'delete_note', 'list_notes']
+21:18:03  0.1s refused  tools/list HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:18:08  0.0s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:18:14  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:18:19  0.0s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:18:24  0.0s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:18:29  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:18:34  0.0s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:18:39  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:18:44  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:18:49  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:18:54  0.0s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:18:59  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:19:04  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:19:09  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:19:14  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:19:19  0.0s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:19:24  0.0s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:19:29  0.0s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:19:34  0.0s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:19:39  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:19:44  0.0s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:19:50  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:19:55  0.0s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:20:00  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:20:05  0.0s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:20:10  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:20:15  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:20:20  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:20:25  0.0s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:20:30  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:20:35  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:20:40  0.0s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:20:45  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:20:50  0.0s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:20:55  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:21:00  0.0s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:21:05  0.0s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:21:10  0.0s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:21:15  0.0s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:21:20  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:21:26  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:21:31  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:21:36  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:21:41  0.0s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:21:46  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:21:51  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:21:56  0.0s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:22:01  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:22:06  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:22:11  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:22:16  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:22:21  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:22:26  0.0s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:22:31  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:22:36  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:22:41  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:22:46  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:22:52  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:22:57  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:23:02  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:23:07  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:23:12  0.0s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:23:17  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:23:22  0.0s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:23:27  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:23:32  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:23:37  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:23:42  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:23:47  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:23:52  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:23:57  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:24:02  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:24:08  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:24:13  0.1s refused  initialize HTTP 200 AccessBlockedByGateway Access to MCP server 'notes' is blocked.
+21:24:19  1.1s ok  tools=['add_note', 'count_notes', 'delete_note', 'list_notes']
+21:24:24  0.2s ok  tools=['add_note', 'count_notes', 'delete_note', 'list_notes']
+21:24:29  0.2s ok  tools=['add_note', 'count_notes', 'delete_note', 'list_notes']
+21:24:34  0.2s ok  tools=['add_note', 'count_notes', 'delete_note', 'list_notes']
+21:24:40  0.2s ok  tools=['add_note', 'count_notes', 'delete_note', 'list_notes']
+21:24:45  0.2s ok  tools=['add_note', 'count_notes', 'delete_note', 'list_notes']
+21:24:50  0.2s ok  tools=['add_note', 'count_notes', 'delete_note', 'list_notes']
+21:24:55  0.2s ok  tools=['add_note', 'count_notes', 'delete_note', 'list_notes']

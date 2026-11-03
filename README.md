@@ -2,7 +2,7 @@
 
 **Question:** When an Azure API Management gateway is connected to Agent 365, what is actually governed: which calls a block stops and how fast, at what granularity, how new or changed MCP servers are noticed, with which identity and permissions, which controls we have in Agent 365, and with which audit records?
 
-**Time box:** 2 days · **Status:** first findings — see [the findings](docs/FINDINGS.md) · **Variant:** the same question with a LiteLLM gateway, in [spike-agent365-litellm-tools-gateway](https://github.com/ikhemissi/spike-agent365-litellm-tools-gateway)
+**Time box:** 2 days · **Status:** done for Standard v2 — see [the findings](docs/FINDINGS.md) · **Variant:** the same question with a LiteLLM gateway, in [spike-agent365-litellm-tools-gateway](https://github.com/ikhemissi/spike-agent365-litellm-tools-gateway)
 
 ## The setup
 
@@ -70,21 +70,21 @@ sequenceDiagram
     APIM-->>Client: HTTP 200, JSON-RPC -32000 AccessBlockedByGateway
     Admin->>A365: Unblock
     A365->>APIM: accessState = active
-    Note over APIM: calls work again within about 10 s
+    Note over APIM: calls work again within 8–14 s
 ```
 
 | Question | Finding |
 |---|---|
-| Discovery | MCP servers listed within 5 minutes of the consent, without any action; new servers appear on their own |
+| Discovery | MCP servers listed within 5 minutes of the consent, without any action; a server added later within about a minute |
 | Enforcement | A block is one property of the API (`accessState`), enforced by API Management within 4–8 s for every client |
 | Granularity | Per server on Standard v2; tool-level control is a capability of the AI Gateway tier |
 | Drift | A changed or added tool is served at once (the chat used a new `delete_note` tool); block the server to stop it |
-| Re-deployment | Re-applying the API's definition keeps the block; a deleted and recreated API starts unblocked |
+| Re-deployment | `azd provision` of the layer that registers the API keeps the block; a deleted and recreated API starts unblocked |
 | Identity | The consent grants an Azure role at the tenant root management group (read API Management, write APIs); the user's token is checked at the gateway, API Management's identity reaches the MCP server |
 | Audit | Activity log (each block, by Agent 365), Defender (the administrator), gateway logs (each MCP request), the app's telemetry (user and tool) |
 | Compared with LiteLLM | The same per-server block within seconds, with no gateway key to hold; LiteLLM adds per-tool toggles and, with its guardrail, a Defender record of every tool call |
 
-The answers to every question, with the evidence and the open points: **[docs/FINDINGS.md](docs/FINDINGS.md)**.
+The answers to every question, with the evidence: **[docs/FINDINGS.md](docs/FINDINGS.md)**.
 
 ## Documents
 

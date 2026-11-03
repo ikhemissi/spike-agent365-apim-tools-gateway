@@ -40,4 +40,4 @@ and do with the change?
 On Standard v2, Agent 365 governs the server as a whole, so a changed or added tool, including a destructive one,
 reaches every client of the gateway as soon as the server serves it; blocking the server stops all its tools. To
 control individual tools, use the AI Gateway tier ("static list of allowed tools") or an API Management policy written
-for the purpose. Not done yet: re-applying the gateway's infrastructure while the server is blocked.
+for the purpose. Re-provisioning while the server is blocked: see [05](05-redeploy-and-discovery.md).
