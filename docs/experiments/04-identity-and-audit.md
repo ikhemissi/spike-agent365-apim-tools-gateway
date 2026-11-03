@@ -40,12 +40,16 @@ Agent 365 connected to Azure (experiment [01](01-proof-on-public-servers.md)).
 
 - Azure's activity log: an `apis/write` on the API at the block (16:14:45 UTC) and at the unblock (about 16:21 UTC),
   by **Agent 365's service principal**.
+- Microsoft Defender XDR (Advanced Hunting, `CloudAppEvents`): one `ApiEndpointCallEvent` record per admin action
+  (16:14:45 and 16:21:04 UTC), naming **the administrator** and the server
+  (`PATCH …/services/<apim>/mcpservers/notes/access/all`). The new state (blocked or active) is read from the activity
+  log or from the API's `accessState`.
 
 ## Conclusion
 
 The user's token is checked at the gateway on every call, and API Management calls the model and the notes server with
 its own identity. API Management's gateway logs record each MCP request (API, operation, caller IP, status, timings,
-backend call), the chat UI's telemetry records the user and the tool names, and Azure's activity log records Agent
-365's write to the API at each block and unblock. To add the user (`oid`) and the JSON-RPC method or tool name to API
+backend call), the chat UI's telemetry records the user and the tool names, Azure's activity log records Agent
+365's write to the API at each block and unblock, and Defender records the administrator who made each change. To add the user (`oid`) and the JSON-RPC method or tool name to API
 Management's logs, add a policy for it (e.g. `trace` or `log-to-eventhub`); "tool activity observability" is a
 capability of the AI Gateway tier.

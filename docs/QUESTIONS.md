@@ -10,7 +10,7 @@ The main question: when an Azure API Management gateway is connected to Agent 36
 | Q4 | **Drift:** when an approved MCP server changes or adds tools, is it noticed, flagged or re-approved? Does anything outside Agent 365 (a re-deployment, an Azure administrator) undo a block, and does Agent 365 notice? | 01, 03 | partly answered |
 | Q5 | **Identity and permissions:** what does the tenant consent grant Agent 365, and on what scope? Does the user's identity reach the gateway and the MCP servers? | 01, 04 | answered |
 | Q6 | **Runtime controls and audit:** which records exist for a block and for tool calls (Agent 365, Azure activity log, API Management logs, the app's telemetry), and what do they name? | 01, 04 | answered |
-| Q7 | **Compared with LiteLLM:** where does each gateway put the control, the identity and the audit, for the same app and MCP server? | — | open |
+| Q7 | **Compared with LiteLLM:** where does each gateway put the control, the identity and the audit, for the same app and MCP server? | the findings of both spikes | answered |
 
 Status: `open`, `answered`, `partly answered`, `unanswered` (with what blocked it).
 
