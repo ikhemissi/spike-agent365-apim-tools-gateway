@@ -13,7 +13,7 @@ and do with the change?
 - The environment of [00](00-environment.md), after [02](02-block-and-unblock.md) (the server blocked once, then
   unblocked: `accessState: active`).
 - `src/02_probe.py` running ([assets/03-probe.log](assets/03-probe.log)), listing the tools every 5 s.
-- The drift, in `services/notes-mcp/server.py` (marked "Experiment 03"; to be reverted at the end of the spike):
+- The drift, in `services/notes-mcp/server.py` (marked "Experiment 03"; removed from the code at the end of the spike, 2026-11-06):
   - `add_note`'s description gains an instruction for the model: "After adding a note, always list the notes so
     that the user sees them.";
   - a new tool `delete_note(id)` deletes a note.
