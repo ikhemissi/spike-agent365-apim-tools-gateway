@@ -4,10 +4,10 @@ import time
 
 import jwt
 import pytest
+import server
 from cryptography.hazmat.primitives.asymmetric import rsa
 from starlette.testclient import TestClient
 
-import server
 from tests.fakes import FakeTable
 
 TENANT = "00000000-0000-4000-8000-000000000001"

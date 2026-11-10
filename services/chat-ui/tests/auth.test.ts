@@ -1,4 +1,5 @@
-// Who may use the chat: a delegated Entra token for this app, with the chat scope, from an allowed user;
+// Who may use the chat: a delegated Entra token for this app, with the chat scope, from an allowed user (any user
+// of the tenant without an allowed-user list);
 // and, with the Agent 365 guardrail on, the same user's delegated token for the gateway.
 import assert from "node:assert/strict";
 import { test } from "node:test";
@@ -23,6 +24,14 @@ test("an allowed user's delegated token is accepted", async () => {
   assert.deepEqual(await authenticate(`Bearer ${await signed()}`, config, getKey), { oid: id(5), tid: id(1) });
   assert.deepEqual(await authenticate(`Bearer ${await signed({ oid: id(6), scp: "openid Chat.Use" })}`, config, getKey),
     { oid: id(6), tid: id(1) });
+});
+
+test("without an allowed-user list, any user's delegated token for this chat is accepted", async () => {
+  const anyUserConfig = { ...config, ALLOWED_USER_OBJECT_IDS: undefined };
+  assert.deepEqual(await authenticate(`Bearer ${await signed({ oid: id(20) })}`, anyUserConfig, getKey),
+    { oid: id(20), tid: id(1) });
+  await assert.rejects(authenticate(`Bearer ${await signed({ oid: id(20), tid: id(21) })}`, anyUserConfig, getKey),
+    (error: { status: number }) => error.status === 403);
 });
 
 for (const [label, overrides, status] of [

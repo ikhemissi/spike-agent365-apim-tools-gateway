@@ -37,7 +37,10 @@ class CallerPolicy:
             algorithms=["RS256"],
             # v1 tokens name the app ID URI (api://<client id>), v2 tokens the client id alone.
             audience=[self.audience, self.audience.removeprefix("api://")],
-            issuer=[f"https://sts.windows.net/{self.tenant_id}/", f"https://login.microsoftonline.com/{self.tenant_id}/v2.0"],
+            issuer=[
+                f"https://sts.windows.net/{self.tenant_id}/",
+                f"https://login.microsoftonline.com/{self.tenant_id}/v2.0",
+            ],
             options={"require": ["exp", "iat", "oid"]},
         )
         if claims["oid"] != self.caller_id:

@@ -16,6 +16,10 @@ test("reads the settings, with defaults for the scope, the development origin an
   assert.match(config.CHAT_INSTRUCTIONS, /MCP tools/);
 });
 
+test("the allowed-user list is optional", () => {
+  assert.equal(getConfig({ ...environment, ALLOWED_USER_OBJECT_IDS: undefined }).ALLOWED_USER_OBJECT_IDS, undefined);
+});
+
 test("the title, intro and instructions are settings", () => {
   const config = getConfig({ ...environment, CHAT_TITLE: "Team notes", CHAT_INTRO: "Notes for the team.",
     CHAT_INSTRUCTIONS: "Add and list notes when asked." });

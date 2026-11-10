@@ -1,15 +1,18 @@
 {
   "composition": "spike",
   "source": {
-    "commit": "13fce2c4beb31456c297f9e1db217d93a872bd59",
-    "describe": "v0.2.0-11-g13fce2c",
+    "commit": "6c037fb3615ef55e40ed5cdbdd109d91d8d63e1d",
+    "describe": "v0.2.0-57-g6c037fb",
     "dirty": false
   },
   "generated_at": "2026-11-03T13:23:44+00:00",
   "blocks": [
-    "azure-platform",
-    "foundry-model",
+    "azure-root",
+    "monitoring",
+    "foundry",
     "apim-gateway",
+    "container-apps-environment",
+    "container-registry",
     "notes-mcp",
     "chat-ui"
   ],
@@ -26,5 +29,14 @@
     "environment": "spike-agent365-apim-tools-gateway",
     "location": "francecentral",
     "author": "Iheb Khemissi"
-  }
+  },
+  "modules": [
+    "monitoring",
+    "foundry-project",
+    "apim-ai-gateway",
+    "container-apps-environment",
+    "container-registry",
+    "storage-account",
+    "container-app"
+  ]
 }

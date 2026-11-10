@@ -4,12 +4,20 @@
 import { useEffect, useState } from "react";
 import { PublicClientApplication } from "@azure/msal-browser";
 import { MsalProvider } from "@azure/msal-react";
-import { SignedInChat } from "./providers";
+import { SignedInChat, type ExtraToken } from "./providers";
 
-// gatewayScope is set when the gateway needs the user's own token: LiteLLM's Agent 365 guardrail, or API Management.
+// Next to the sign-in scope, the user's own tokens the server asks for: for the gateway when it needs one (LiteLLM's
+// Agent 365 guardrail, or API Management), and for Foundry in Foundry mode.
 interface Scopes {
   scope: string;
-  gatewayScope?: string;
+  extraTokens: ExtraToken[];
+}
+
+function extraTokens(config: { gatewayScope?: string; foundryScope?: string }): ExtraToken[] {
+  const tokens: ExtraToken[] = [];
+  if (config.gatewayScope) tokens.push({ header: "x-gateway-token", scope: config.gatewayScope });
+  if (config.foundryScope) tokens.push({ header: "x-foundry-token", scope: config.foundryScope });
+  return tokens;
 }
 
 interface Heading {
@@ -36,14 +44,14 @@ async function initialize() {
   await app.initialize();
   return {
     app,
-    scopes: { scope: config.scope, gatewayScope: config.gatewayScope },
+    scopes: { scope: config.scope, extraTokens: extraTokens(config) },
     heading: { title: config.title, intro: config.intro },
   };
 }
 
 export default function Page() {
   const [instance, setInstance] = useState<PublicClientApplication>();
-  const [scopes, setScopes] = useState<Scopes>({ scope: "" });
+  const [scopes, setScopes] = useState<Scopes>({ scope: "", extraTokens: [] });
   const [heading, setHeading] = useState<Heading>({ title: "Chat", intro: "" });
   const [error, setError] = useState("");
   useEffect(() => {
@@ -65,7 +73,7 @@ export default function Page() {
     <header><p className="eyebrow">MCP TOOLS THROUGH A GATEWAY</p><h1>{heading.title}</h1>
       {heading.intro && <p>{heading.intro}</p>}</header>
     {error ? <section role="alert">{error}</section>
-      : instance ? <MsalProvider instance={instance}><SignedInChat scope={scopes.scope} gatewayScope={scopes.gatewayScope} /></MsalProvider>
+      : instance ? <MsalProvider instance={instance}><SignedInChat scope={scopes.scope} extraTokens={scopes.extraTokens} /></MsalProvider>
         : <p role="status">Preparing Microsoft sign-in...</p>}
   </main>;
 }

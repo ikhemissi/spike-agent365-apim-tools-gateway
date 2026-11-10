@@ -23,11 +23,11 @@ This repository is a **spike**: it answers questions by experiment, within a tim
 
 ## Infrastructure
 
-- **Layers:** the layers listed in `azure.yaml` that come from shared building blocks (`infra/azure-platform`, `infra/foundry-model`, `infra/apim-gateway`, `infra/notes-mcp`, `infra/chat-ui`) are shared building blocks, each its own Terraform root and state. Keep them as they are, so that their improvements can be merged in later; put the spike's own resources in a new layer (`infra/<name>/`, reading the other layers' outputs from azd values in its `main.tfvars.json`) and add it to `azure.yaml`.
-- **Gateway settings** (MCP servers and their policies) are Azure resources: register them in a layer of the spike's own (azapi for the MCP APIs), never by hand in the portal, so that a re-provision does not undo them.
-- **Notes MCP server:** `infra/notes-mcp` and `services/notes-mcp` are a shared building block; its checks: `uv run --no-project --with-requirements requirements.txt --with-requirements requirements-dev.txt pytest` in `services/notes-mcp`.
-- **Chat UI:** `infra/chat-ui` and `services/chat-ui` are a shared building block too: change what it shows and tells the model with its settings (`CHAT_UI_TITLE`, `CHAT_UI_INTRO`, `CHAT_UI_INSTRUCTIONS`), not its files. Its checks: `npm ci && npm run typecheck && npm run lint && npm test && npm run build` in `services/chat-ui`.
-- **Before every `azd provision`:** `azd hooks run preprovision`, then `azd provision --preview`, and read the plan.
+- **One Terraform root** (`infra/`, one state), one file per part of the architecture. The files from shared building blocks (`apim-gateway.tf`, `notes-mcp.tf`, `chat-ui.tf`, `foundry.tf`, `monitoring.tf`, `main.tf`, `providers.tf`, …), the modules in `infra/modules/` and the hook steps in `infra/hooks/<event>/` stay as they are, so that their improvements can be merged in later. How the optional parts connect is the project's own `infra/connections.tf`. Put the spike's own resources in a new file of `infra/` (calling a module of `infra/modules/` where one fits), its settings as variables mapped in `infra/main.tfvars.json`, its outputs as azd values, and its steps in `infra/hooks/<event>/NN-<name>.sh`.
+- **Gateway settings** (MCP servers and their policies) are Azure resources: register them in a file of `infra/` (azapi for the MCP APIs), never by hand in the portal, so that a re-provision does not undo them.
+- **Notes MCP server:** `services/notes-mcp` comes from a shared building block; its checks: `uv run --no-project --with-requirements requirements.txt --with-requirements requirements-dev.txt pytest` in `services/notes-mcp`.
+- **Chat UI:** `services/chat-ui` comes from a shared building block too: change what it shows and tells the model with its settings (`CHAT_UI_TITLE`, `CHAT_UI_INTRO`, `CHAT_UI_INSTRUCTIONS`), not its files; who may use it is the Entra group `CHAT_USERS_GROUP_ID`. Its checks: `npm ci && npm run typecheck && npm run lint && npm test && npm run build` in `services/chat-ui`.
+- **Before every `azd provision`:** `azd provision --preview` (one plan for the whole root) and read it: only expected adds and changes, no unexpected destroy. Module tests: `terraform init -backend=false && terraform test` in `infra/modules/<module>`.
 
 ## Code humans can maintain
 
