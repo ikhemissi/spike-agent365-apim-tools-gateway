@@ -5,20 +5,48 @@ users talk to a model **through a gateway**, and the assistant uses the MCP tool
 is shown under the answer with its arguments and its result, or with the error or refusal that stopped it, so that
 what the gateway ran (or blocked) is visible.
 
-Two gateways, chosen with `CHAT_GATEWAY`:
+Three modes, chosen with `CHAT_GATEWAY`: two gateways, and a Foundry hosted agent ([Foundry mode](#foundry-mode)).
 
-```text
-litellm (default): LiteLLM runs the tool loop
-browser (MSAL sign-in) ──Bearer token──▶ /api/copilotkit (checks token, origin, size)
-    ──team key (+ the user's gateway token with GATEWAY_SCOPE)──▶ LiteLLM POST /v1/responses with tool {type: mcp, server_url: litellm_proxy}
-    ──▶ LiteLLM lists and runs the team's MCP tools itself ──▶ streamed events ──▶ AG-UI events ──▶ chat
+**`litellm` (default): LiteLLM runs the tool loop.**
 
-apim: API Management is only a proxy, this server runs the tool loop
-browser (MSAL sign-in + gateway token) ──▶ /api/copilotkit (checks both tokens, origin, size)
-    ──the user's gateway token──▶ API Management MCP servers: initialize, tools/list ──▶ function tools
-    ──the user's gateway token──▶ API Management POST /openai/v1/responses (function tools) ──managed identity──▶ Foundry model
-    ◀── function calls ── this server runs them: MCP tools/call through API Management ── results ──▶ next round …
-    ──▶ the answer, then the tool lines ──▶ AG-UI events ──▶ chat
+```mermaid
+sequenceDiagram
+    actor User as User (browser)
+    participant App as Chat server<br/>/api/copilotkit
+    participant LiteLLM
+    participant MCP as MCP servers
+    User->>App: message, with the sign-in token (MSAL)
+    Note over App: checks the token, the origin and the size
+    App->>LiteLLM: POST /v1/responses with the team key<br/>(and the user's gateway token with GATEWAY_SCOPE)<br/>tool: type mcp, server_url litellm_proxy
+    LiteLLM->>MCP: lists and runs the team's MCP tools
+    MCP-->>LiteLLM: results
+    LiteLLM-->>App: streamed events: the text and the mcp_call items
+    App-->>User: AG-UI events: the answer and the tool lines
+```
+
+**`apim`: API Management is only a proxy; this server runs the tool loop.**
+
+```mermaid
+sequenceDiagram
+    actor User as User (browser)
+    participant App as Chat server<br/>/api/copilotkit
+    participant APIM as API Management
+    participant Model as Foundry model
+    participant MCP as MCP servers
+    User->>App: message, with the sign-in token and the gateway token (MSAL)
+    Note over App: checks both tokens, the origin and the size
+    App->>APIM: MCP initialize, tools/list (the user's gateway token)
+    APIM->>MCP: forwards
+    APIM-->>App: the servers' tools, as function tools
+    loop until the model answers without calling a tool
+        App->>APIM: POST /openai/v1/responses with the function tools (the user's gateway token)
+        APIM->>Model: forwards (API Management's managed identity)
+        APIM-->>App: function calls, or the answer (streamed)
+        App->>APIM: MCP tools/call for each function call (the user's gateway token)
+        APIM->>MCP: forwards
+        APIM-->>App: the results, sent to the model in the next round
+    end
+    App-->>User: AG-UI events: the answer, then the tool lines
 ```
 
 With LiteLLM, the app never calls an MCP server: LiteLLM decides which tools exist for the team's key and runs them;
@@ -32,12 +60,14 @@ the app shows what LiteLLM reports. The team key stays on the server. With API M
 | `app/auth/callback/page.tsx` | Returns the sign-in popup's result to the page |
 | `app/api/copilotkit/[[...slug]]/route.ts` | The CopilotKit runtime endpoint |
 | `app/api/config/route.ts`, `app/api/health/route.ts` | Public settings (sign-in, title, intro); the container probe |
+| `app/api/session/route.ts`, `lib/server/session-handler.ts` | Foundry mode: starts the agent's session when a chat opens |
 | `lib/server/handler.ts` | Origin check, sign-in, 128 KiB body limit, request ids, runs the agent |
-| `lib/server/auth.ts` | Entra token validation: the sign-in token, and the gateway token when `GATEWAY_SCOPE` is set |
+| `lib/server/auth.ts` | Entra token validation: the sign-in token, the gateway token when `GATEWAY_SCOPE` is set, the Foundry token in Foundry mode |
 | `lib/server/agent.ts` | The `chat` agent: conversation in, AG-UI events out, errors as chat messages; picks the gateway |
 | `lib/server/responses-stream.ts` | One streamed Responses API call (either gateway): refusals, server-sent events, its span |
 | `lib/server/litellm.ts` | LiteLLM mode: the team key, the user's token, LiteLLM's MCP tool |
 | `lib/server/responses-to-ag-ui.ts` | Responses events → AG-UI events: the text (both modes) and LiteLLM's `mcp_call` items |
+| `lib/server/foundry.ts`, `lib/server/foundry-sessions.ts` | Foundry mode: calls the hosted agent with the user's tokens, reusing its session per chat thread; its `function_call` items → AG-UI events |
 | `lib/server/tool-loop.ts` | API Management mode: the tool loop (model rounds, tool calls, their AG-UI events) |
 | `lib/server/mcp-tools.ts` | API Management mode: the MCP servers through the gateway (connect, list, call, close), function tool names |
 | `lib/tool-result.ts` | A tool result as the chat shows it (`ok` or `error`) |
@@ -48,16 +78,17 @@ the app shows what LiteLLM reports. The team key stays on the server. With API M
 
 | Variable | Required | Meaning |
 |---|---|---|
-| `CHAT_GATEWAY` | no, `litellm` | `litellm` (LiteLLM runs the MCP tools) or `apim` (Azure API Management; this server runs them) |
-| `GATEWAY_URL` | yes | HTTPS, no credentials, query or fragment (a trailing `/` is dropped). `litellm`: LiteLLM's base URL (`azd env get-value LITELLM_URL`), requests go to `{GATEWAY_URL}/v1/responses`; `apim`: API Management's OpenAI v1 base, `https://<apim>.azure-api.net/openai/v1`, requests go to `{GATEWAY_URL}/responses` |
+| `CHAT_GATEWAY` | no, `litellm` | `litellm` (LiteLLM runs the MCP tools), `apim` (Azure API Management; this server runs them) or `foundry` (a Foundry hosted agent runs its tools as the user) |
+| `GATEWAY_URL` | yes | HTTPS, no credentials, query or fragment (a trailing `/` is dropped). `litellm`: LiteLLM's base URL (`azd env get-value LITELLM_URL`), requests go to `{GATEWAY_URL}/v1/responses`; `apim`: API Management's OpenAI v1 base, `https://<apim>.azure-api.net/openai/v1`, requests go to `{GATEWAY_URL}/responses`; `foundry`: the Foundry project endpoint (`azd env get-value FOUNDRY_PROJECT_ENDPOINT`), requests go to the agent's Responses endpoint |
 | `CHAT_MODEL` | yes | The model alias (LiteLLM) or deployment name (API Management), e.g. `gpt-6-luna` (`azd env get-value FOUNDRY_MODEL_DEPLOYMENT_NAME`) |
 | `LITELLM_API_KEY` | `litellm` only | The team's LiteLLM virtual key (on Azure, from the Key Vault secret `CHAT_UI_LITELLM_KEY_SECRET_NAME`); server only. Not read in `apim` mode, so never sent to API Management |
 | `UI_TENANT_ID` | yes | Entra tenant (GUID) |
 | `UI_CLIENT_ID` | yes | The app registration used both as the SPA and as the API (GUID) |
 | `UI_SCOPE` | no, `Chat.Use` | The delegated scope the API exposes; the browser asks for `api://{UI_CLIENT_ID}/{UI_SCOPE}` |
 | `UI_ORIGIN` | no, `http://localhost:3000` | The page's origin: HTTPS, or `http://localhost` / `http://127.0.0.1` for development |
-| `ALLOWED_USER_OBJECT_IDS` | yes | Comma-separated user object ids (GUIDs) allowed to chat |
+| `ALLOWED_USER_OBJECT_IDS` | no | Comma-separated user object ids (GUIDs) allowed to chat. Without it, every user who can sign in to the app registration may chat: limit who can sign in with Entra instead (an app role assignment required on the app, e.g. for a group) |
 | `GATEWAY_SCOPE` | `apim` only | The gateway app registration's delegated scope, `api://{gateway app id}/{scope}`: the browser gets the user's own token for it. `litellm`: optional, only when LiteLLM runs the Agent 365 guardrail (see [Agent 365 guardrail](#agent-365-guardrail)); `apim`: required, it is the credential for every call to API Management |
+| `FOUNDRY_AGENT` | `foundry` only | The hosted agent's name in the project, e.g. `travel-assistant` |
 | `MCP_SERVERS` | `apim` only | The MCP servers API Management exposes: comma-separated `label=url`, e.g. `notes=https://<apim>.azure-api.net/notes/mcp,files=…`. Label `^[a-z][a-z0-9_]{0,30}$`, unique (it prefixes the tool names: `notes-add_note`); URL HTTPS without credentials, query or fragment |
 | `CHAT_TITLE` | no, `Chat` | The page's title |
 | `CHAT_INTRO` | no, a generic line | The text under the title |
@@ -65,11 +96,11 @@ the app shows what LiteLLM reports. The team key stays on the server. With API M
 | `APPLICATIONINSIGHTS_CONNECTION_STRING` | no | Turns OpenTelemetry on: traces and metrics to that Application Insights resource |
 | `AZURE_CLIENT_ID` | no | The managed identity that sends them (in Azure); without it, your Azure CLI sign-in |
 
-`/api/config` returns only `{tenantId, clientId, scope, origin, title, intro}`, plus `gatewayScope` when `GATEWAY_SCOPE` is set.
+`/api/config` returns only `{tenantId, clientId, scope, origin, title, intro}`, plus `gatewayScope` when `GATEWAY_SCOPE` is set and `foundryScope` in Foundry mode.
 
 **Sign-in rules** (`/api/copilotkit`): a `Bearer` token signed RS256 by the tenant (`https://login.microsoftonline.com/{tenant}/v2.0`),
 audience `UI_CLIENT_ID`, with `exp`, `iat`, `oid`, `tid`, `azp` and `scp`; `tid` is the tenant, `azp` is `UI_CLIENT_ID`,
-the token is delegated (no `idtyp: app`), `scp` contains `UI_SCOPE`, and `oid` is in `ALLOWED_USER_OBJECT_IDS`.
+the token is delegated (no `idtyp: app`), `scp` contains `UI_SCOPE`, and `oid` is in `ALLOWED_USER_OBJECT_IDS` when it is set.
 Otherwise 401 (no or invalid token) or 403 (wrong caller, scope or user). The app registration needs the SPA redirect
 URI `{UI_ORIGIN}/auth/callback` and the exposed scope.
 
@@ -149,6 +180,29 @@ LiteLLM mode. Tool lines already run are shown before the ⚠️ message.
 model call 180 s; up to 10 pages of `tools/list` per server; text content only (images and resources in tool results are
 not shown or sent to the model); every message reconnects to the MCP servers.
 
+## Foundry mode
+
+`CHAT_GATEWAY=foundry`: the chat talks to a Foundry hosted agent (`FOUNDRY_AGENT`, Responses protocol), which runs its
+own tools as the signed-in user. This server never calls the gateway.
+
+- The browser asks for two more tokens of the same user: for the gateway (`GATEWAY_SCOPE`, required) and for Foundry
+  (`https://ai.azure.com/user_impersonation`), sent in `x-gateway-token` and `x-foundry-token`. The chat's app
+  registration needs consent for Foundry's API (the infrastructure grants it tenant-wide).
+- The server checks both like the sign-in token: delegated, asked by this chat, for the signed-in user. Foundry's API
+  issues v1 tokens (issuer `https://sts.windows.net/{tenant}/`, audience `https://ai.azure.com`, client in `appid`).
+- It calls `{GATEWAY_URL}/agents/{FOUNDRY_AGENT}/endpoint/protocols/openai/responses?api-version=v1` with the Foundry
+  token, and forwards both tokens in `x-client-foundry-token` and `x-client-gateway-token`, which Foundry passes on to
+  the agent's container.
+- The agent reports each tool call as a `function_call` item, then its `function_call_output`: each is shown as soon
+  as it arrives (unlike the gateway modes, where tool lines follow the answer), since another agent over A2A can take
+  several seconds.
+- The agent's session is started as soon as a chat opens: the page sends the chat's thread id to `/api/session`
+  (same checks as the chat), which starts a session as the user (`POST …/agents/{agent}/endpoint/sessions`), so the
+  agent's container is running by the first message (a new session takes about 5–8 s to start). Every message of the
+  thread then reuses it (`agent_session_id` in the request body); a message sent while it starts waits for it. The
+  server remembers one session per user and thread, in memory, for up to 15 minutes of inactivity
+  (`lib/server/foundry-sessions.ts`).
+
 ## Run locally
 
 Node 22 or later.
@@ -163,7 +217,7 @@ npm run dev                   # http://localhost:3000
 To fill `LITELLM_API_KEY` (LiteLLM mode) without printing it, from the repository root:
 
 ```bash
-echo "LITELLM_API_KEY=$(az keyvault secret show --vault-name "$(azd env get-value PLATFORM_KEY_VAULT_NAME)" \
+echo "LITELLM_API_KEY=$(az keyvault secret show --vault-name "$(azd env get-value KEY_VAULT_NAME)" \
   -n "$(azd env get-value CHAT_UI_LITELLM_KEY_SECRET_NAME)" --query value -o tsv)" >> services/chat-ui/.env.local
 ```
 
@@ -229,7 +283,8 @@ notes MCP server, for "add a note, then list notes":
 **Failures:**
 
 - **A tool that fails is still `status: completed`, with `error: null`.** The error is only in `output`: the notes
-  server's own error gives `"Error executing tool list_notes"` (checked live with `limit: 500`); in LiteLLM's source
+  server's own error gave `"Error executing tool list_notes"` (checked live with `limit: 500`; with the MCP Python SDK
+  2.3, a server's own message follows only when the tool raises `ToolError`: `"Error executing tool list_notes: …"`); in LiteLLM's source
   (`litellm/responses/mcp/litellm_proxy_mcp_handler.py` at v1.106.6) a guardrail block gives `"Tool call blocked: …"`,
   a gateway `HTTPException` gives `"Tool call failed: …"`, and other exceptions `"Error executing tool: …"`. The app
   treats these prefixes (or a non-empty `error`, or `status: failed`) as an error result.

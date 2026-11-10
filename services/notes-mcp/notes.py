@@ -6,6 +6,8 @@ from datetime import UTC, datetime
 from itertools import islice
 from typing import Any, Protocol
 
+from mcp.server.mcpserver.exceptions import ToolError
+
 PARTITION = "notes"
 MAX_TEXT_LENGTH = 1000
 DEFAULT_LIMIT = 10
@@ -14,8 +16,9 @@ MAX_LIMIT = 50
 FAR_FUTURE_MS = 10**13
 
 
-class InvalidArguments(ValueError):
-    """The tool was called with arguments it does not accept; the message is safe to show to the caller."""
+class InvalidArguments(ToolError):
+    """The tool was called with arguments it does not accept. A ToolError, so that MCP shows the message to the caller
+    (the model can then correct its call); any other exception reaches it only as "Error executing tool"."""
 
 
 class Table(Protocol):

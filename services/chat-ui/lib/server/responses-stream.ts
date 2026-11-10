@@ -89,10 +89,12 @@ export async function refusal(response: Response): Promise<ChatError> {
 }
 
 export async function* streamResponses({
-  url, model, headers, body, signal, fetchImpl = fetch,
+  url, model, headers, body, signal, fetchImpl = fetch, onResponseHeaders,
 }: {
   url: string; model: string; headers: Record<string, string>; body: Record<string, unknown>;
   signal: AbortSignal; fetchImpl?: typeof fetch;
+  // Foundry mode reads the hosted agent's session id from the response headers.
+  onResponseHeaders?: (headers: Headers) => void;
 }): AsyncGenerator<ResponsesEvent> {
   // The span lasts until the stream ends: with LiteLLM, it runs the model and the MCP tools while it streams.
   const span = startGatewaySpan(url, model, headers);
@@ -105,6 +107,7 @@ export async function* streamResponses({
     });
     status = response.status;
     if (!response.ok) throw await refusal(response);
+    onResponseHeaders?.(response.headers);
     if (!response.body || !response.headers.get("content-type")?.includes("text/event-stream")) {
       await response.body?.cancel();
       throw new ChatError("gateway", "invalid_response", "The gateway did not return a Responses event stream.");

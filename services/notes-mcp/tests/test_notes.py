@@ -1,8 +1,8 @@
 from datetime import UTC, datetime, timedelta
 
+import notes
 import pytest
 
-import notes
 from tests.fakes import FakeTable
 
 

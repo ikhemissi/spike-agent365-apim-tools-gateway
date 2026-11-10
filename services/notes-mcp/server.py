@@ -7,15 +7,14 @@ import logging
 import os
 from functools import cache
 
+import notes
 from azure.data.tables import TableClient, TableServiceClient
 from azure.identity import DefaultAzureCredential
+from caller_auth import CallerPolicy, RequireCaller
 from mcp.server import MCPServer
 from mcp.server.transport_security import TransportSecuritySettings
 from starlette.requests import Request
 from starlette.responses import JSONResponse
-
-import notes
-from caller_auth import CallerPolicy, RequireCaller
 
 TABLE_NAME = "notes"
 logger = logging.getLogger("notes")
@@ -43,9 +42,7 @@ def add_note(text: str) -> dict[str, str]:
     return created
 
 
-@server.tool(
-    description="List the most recent team notes, newest first."
-)
+@server.tool(description="List the most recent team notes, newest first.")
 def list_notes(limit: int = notes.DEFAULT_LIMIT) -> list[dict[str, str]]:
     """limit: how many notes to return, from 1 to 50."""
     valid_limit = notes.limit_to_list({"limit": limit})

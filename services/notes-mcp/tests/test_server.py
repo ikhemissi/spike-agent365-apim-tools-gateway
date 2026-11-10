@@ -1,9 +1,9 @@
 """The MCP endpoint as a client sees it: initialize, list the tools, call them (with an in-memory table)."""
 
 import pytest
+import server
 from starlette.testclient import TestClient
 
-import server
 from tests.fakes import FakeTable
 
 HEADERS = {"Accept": "application/json, text/event-stream", "Content-Type": "application/json"}
@@ -49,7 +49,8 @@ def test_a_note_added_is_listed(client):
     assert "hello" in str(listed["structuredContent"])
 
 
-def test_invalid_arguments_return_a_tool_error(client):
+def test_invalid_arguments_return_a_tool_error_that_says_why(client):
     result = rpc(client, "tools/call", {"name": "add_note", "arguments": {"text": " "}})["result"]
 
     assert result["isError"] is True
+    assert "text is required" in str(result["content"])

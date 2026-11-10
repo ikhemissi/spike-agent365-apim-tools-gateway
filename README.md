@@ -60,11 +60,11 @@ flowchart LR
 
 | Component | Where | Role |
 |---|---|---|
-| Chat UI | `services/chat-ui`, `infra/chat-ui` | Signs the user in; runs the tool loop (model → tool calls → MCP → model) with the user's token |
-| API Management | `infra/apim-gateway` | The gateway: validates the user's token, calls the model and the MCP servers with its managed identity |
-| MCP server registration | `infra/apim-mcp` (the spike's own layer) | Registers the notes server in API Management as a pass-through MCP API |
-| Notes MCP server | `services/notes-mcp`, `infra/notes-mcp` | Three tools (`add_note`, `list_notes`, `count_notes`) on Container Apps |
-| Foundry model | `infra/foundry-model` | The model the chat uses |
+| Chat UI | `services/chat-ui`, `infra/chat-ui.tf` | Signs the user in; runs the tool loop (model → tool calls → MCP → model) with the user's token |
+| API Management | `infra/apim-gateway.tf` | The gateway: validates the user's token, calls the model and the MCP servers with its managed identity |
+| MCP server registration | `infra/apim-mcp.tf` (the spike's own file) | Registers the notes server and Microsoft Learn's MCP server in API Management as pass-through MCP APIs |
+| Notes MCP server | `services/notes-mcp`, `infra/notes-mcp.tf` | Three tools (`add_note`, `list_notes`, `count_notes`) on Container Apps |
+| Foundry model | `infra/foundry.tf` | The model the chat uses |
 | Agent 365 | Microsoft 365 admin center | Lists the gateway's MCP servers; blocks and unblocks them |
 
 ## Key findings
@@ -94,7 +94,7 @@ sequenceDiagram
 | Enforcement | A block is one property of the API (`accessState`), enforced by API Management within 4–8 s for every client |
 | Granularity | Per server on Standard v2; tool-level control is a capability of the AI Gateway tier |
 | Drift | A changed or added tool is served at once (the chat used a new `delete_note` tool); block the server to stop it |
-| Re-deployment | `azd provision` of the layer that registers the API keeps the block; a deleted and recreated API starts unblocked |
+| Re-deployment | `azd provision` keeps the block; a deleted and recreated API starts unblocked |
 | Identity | The consent grants an Azure role at the tenant root management group (read API Management, write APIs); the user's token is checked at the gateway, API Management's identity reaches the MCP server |
 | Audit | Activity log (each block, by Agent 365), Defender (the administrator), gateway logs (each MCP request), the app's telemetry (user and tool) |
 | Compared with LiteLLM | The same per-server block within seconds, with no gateway key to hold; LiteLLM adds per-tool toggles and, with its guardrail, a Defender record of every tool call |
@@ -113,28 +113,22 @@ The answers to every question, with the evidence: **[docs/FINDINGS.md](docs/FIND
 
 ## Environment
 
-The infrastructure is a set of azd layers (`infra/<layer>/`, one Terraform root each), listed in `azure.yaml` in the order they are provisioned. Each layer's README-level notes are at the top of its `main.tf`.
+The infrastructure is one Terraform root (`infra/`), one file per part, built from the modules in `infra/modules/`; `infra/connections.tf` wires the optional parts together. azd runs the steps of `infra/hooks/<event>/` around it (state backend and quota check before, configuration after, a clean teardown).
 
 ```bash
 az login && azd auth login
 azd env new spike-agent365-apim-tools-gateway --location francecentral
 azd env set RESOURCE_TAGS "key=value,key=value"   # tags your tenant's policies require, if any
-azd hooks run preprovision                        # remote state backend; run it before the preview
-azd provision --preview                           # read the plan of every layer before applying
-azd provision
+azd hooks run preprovision                        # remote state backend and model quota: once before the first preview
+azd provision --preview                           # read the plan
+azd up                                            # provision, then deploy the services
 ```
 
-The gateway is Azure API Management (Standard v2, about $1 an hour while it exists): `azd env get-value APIM_GATEWAY_URL`. Callers present their own Entra token for `APIM_GATEWAY_SCOPE`; it calls the model with its managed identity (`APIM_MODELS_URL`). Register MCP servers in it from a layer of the spike's own (azapi: a `backends` resource with the server's URL, and an `apis` resource of type `mcp` with `backendId` and `mcpProperties.transportType: streamable`); the MCP endpoint is then `<gateway>/<path>`. The notes MCP server accepts only the gateway's identity: give the server's API the policy `<authentication-managed-identity resource="NOTES_MCP_AUDIENCE" />` (the value of that azd variable).
+Later changes: `azd provision --preview`, read the plan, then `azd provision`.
 
-The chat UI (`services/chat-ui`, settings in its README) signs the user in and calls API Management with the user's own token for the model and for the MCP servers listed in `CHAT_UI_MCP_SERVERS` (`label=url,...`, output by the layer that registers them), running the tool loop itself. Then:
+The gateway is Azure API Management (Standard v2, about $1 an hour while it exists): `azd env get-value APIM_GATEWAY_URL`. Callers present their own Entra token for `APIM_GATEWAY_SCOPE`; it calls the model with its managed identity (`APIM_MODELS_URL`). This spike registers the notes MCP server and Microsoft Learn's MCP server in `infra/apim-mcp.tf` (`APIM_MCP_NOTES_URL`, `APIM_MCP_LEARN_URL`); register others the same way, from a file of `infra/` (azapi: a `backends` resource with the server's URL, and an `apis` resource of type `mcp` with `backendId` and `mcpProperties.transportType: streamable`, its policy with azurerm's `azurerm_api_management_api_policy`); the MCP endpoint is then `<gateway>/<path>`. The notes MCP server accepts only the gateway's identity: give the server's API the policy `<authentication-managed-identity resource="NOTES_MCP_AUDIENCE" />` (the value of that azd variable).
 
-```bash
-# Optional: what the page shows and tells the model (also CHAT_UI_INTRO and CHAT_UI_INSTRUCTIONS)
-azd env set CHAT_UI_TITLE "Governing API Management MCP servers with Agent 365"
-azd provision chat-ui --preview && azd provision chat-ui
-azd deploy chat-ui            # the first deployment provisions chat-ui again for its port
-azd env get-value CHAT_UI_URL
-```
+The chat UI (`services/chat-ui`, settings in its README) signs the user in and calls API Management with the user's own token for the model and for the MCP servers listed in `MCP_SERVERS` in `infra/connections.tf` (`label=url,...`), running the tool loop itself. Only the members of the group `CHAT_USERS_GROUP_ID` may sign in (you are one; assigning a group needs Microsoft Entra ID P1 or P2): `azd env get-value CHAT_UI_URL`.
 
 Tear it down when the spike ends: `azd down --purge`.
 

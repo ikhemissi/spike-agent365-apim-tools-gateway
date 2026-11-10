@@ -1,36 +1,11 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
 name: spike-agent365-apim-tools-gateway
 
-# One Terraform root per layer (infra/<layer>/), provisioned in this order; layers pass values through the azd
-# environment. Add the spike's own layers after these.
+# One Terraform root (infra/): each file is one part of the architecture, built from the modules in infra/modules;
+# connections.tf wires the optional parts together. Put the spike's own resources in a new file of infra/.
 infra:
   provider: terraform
-  layers:
-    - name: azure-platform
-      path: infra/azure-platform
-    - name: foundry-model
-      path: infra/foundry-model
-      dependsOn: [azure-platform]
-      hooks:
-        preprovision:
-          posix:
-            shell: sh
-            run: bash ./hooks/preprovision.sh
-    - name: apim-gateway
-      path: infra/apim-gateway
-      dependsOn: [azure-platform, foundry-model]
-    # With API Management, only the gateway's identity can call it (external ingress); with LiteLLM, internal ingress.
-    - name: notes-mcp
-      path: infra/notes-mcp
-      dependsOn: [azure-platform, apim-gateway]
-    # The spike's own layer: the notes MCP server registered in API Management (azapi); outputs CHAT_UI_MCP_SERVERS.
-    - name: apim-mcp
-      path: infra/apim-mcp
-      dependsOn: [apim-gateway, notes-mcp]
-    # Calls API Management with the user's own token and runs the tool loop itself (CHAT_UI_MCP_SERVERS).
-    - name: chat-ui
-      path: infra/chat-ui
-      dependsOn: [azure-platform, foundry-model, apim-gateway, apim-mcp]
+  path: infra
 
 services:
   notes-mcp:
@@ -39,37 +14,40 @@ services:
     host: containerapp
     docker:
       path: ./Dockerfile
-      # Images are built in the platform's registry: no local Docker needed to deploy.
+      # Images are built in the project's registry: no local Docker needed to deploy.
       remoteBuild: true
-    hooks:
-      postdeploy:
-        posix:
-          shell: sh
-          run: bash ../../infra/notes-mcp/hooks/postdeploy.sh
   chat-ui:
     project: ./services/chat-ui
     language: ts
     host: containerapp
     docker:
       path: ./Dockerfile
-      # Images are built in the platform's registry: no local Docker needed to deploy.
+      # Images are built in the project's registry: no local Docker needed to deploy.
       remoteBuild: true
-    hooks:
-      postdeploy:
-        posix:
-          shell: sh
-          run: bash ../../infra/chat-ui/hooks/postdeploy.sh
 
+# Each event runs the steps of infra/hooks/<event>/ in name order (infra/hooks/run.sh): what Terraform cannot do.
 hooks:
   preprovision:
     posix:
       shell: sh
-      run: bash ./infra/azure-platform/hooks/preprovision.sh
+      run: bash ./infra/hooks/run.sh preprovision
+      interactive: false
+      continueOnError: false
+  postprovision:
+    posix:
+      shell: sh
+      run: bash ./infra/hooks/run.sh postprovision
+      interactive: false
+      continueOnError: false
+  postdeploy:
+    posix:
+      shell: sh
+      run: bash ./infra/hooks/run.sh postdeploy
       interactive: false
       continueOnError: false
   predown:
     posix:
       shell: sh
-      run: bash ./infra/azure-platform/hooks/predown.sh
+      run: bash ./infra/hooks/run.sh predown
       interactive: false
       continueOnError: false

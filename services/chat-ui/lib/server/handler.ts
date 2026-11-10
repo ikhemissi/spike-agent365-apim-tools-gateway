@@ -1,11 +1,11 @@
-// The CopilotKit runtime endpoint: checks origin, sign-in (and the gateway token when GATEWAY_SCOPE is set) and
-// request size, then runs the chat agent.
+// The CopilotKit runtime endpoint: checks origin, sign-in (and the gateway token when GATEWAY_SCOPE is set, and the
+// Foundry token in Foundry mode) and request size, then runs the chat agent.
 // Every response carries a request id, which error messages repeat so a failure can be found in the logs.
 import { randomUUID } from "node:crypto";
 import { RunAgentInputSchema } from "@ag-ui/core/schemas";
 import { CopilotRuntime, createCopilotRuntimeHandler, InMemoryAgentRunner } from "@copilotkit/runtime/v2";
 import { agentId, GatewayAgent } from "./agent";
-import { authenticate, verifyGatewayToken } from "./auth";
+import { authenticate, verifyFoundryToken, verifyGatewayToken } from "./auth";
 import { gatewayScope, getConfig } from "./config";
 import { ChatError, reportError } from "./errors";
 import type { McpConnect } from "./mcp-tools";
@@ -16,6 +16,8 @@ const maxBodySize = 131_072;
 // The browser sends the user's token for the gateway (LiteLLM or API Management) here; Authorization carries the
 // sign-in token.
 export const gatewayTokenHeader = "x-gateway-token";
+// Foundry mode: the browser sends the user's token for Foundry here.
+export const foundryTokenHeader = "x-foundry-token";
 
 async function readBoundedBody(request: Request) {
   if (!request.body) return undefined;
@@ -101,6 +103,7 @@ export async function handleRequest(
     config?: typeof getConfig;
     authenticate?: typeof authenticate;
     verifyGatewayToken?: typeof verifyGatewayToken;
+    verifyFoundryToken?: typeof verifyFoundryToken;
     fetchImpl?: typeof fetch;
     connectMcp?: McpConnect;
   } = {},
@@ -117,6 +120,9 @@ export async function handleRequest(
     const gatewayToken = gateway
       ? await (dependencies.verifyGatewayToken ?? verifyGatewayToken)(request.headers.get(gatewayTokenHeader), gateway, user, config)
       : undefined;
+    const foundryToken = config.CHAT_GATEWAY === "foundry"
+      ? await (dependencies.verifyFoundryToken ?? verifyFoundryToken)(request.headers.get(foundryTokenHeader), user, config)
+      : undefined;
     const cancellation = new AbortController();
     const signal = AbortSignal.any([request.signal, cancellation.signal]);
     // The outer stream owns cancellation so the runtime can finalize its SSE writer.
@@ -124,7 +130,7 @@ export async function handleRequest(
     // Agents are request-owned; the runtime's thread coordination is process-local.
     const runtime = new CopilotRuntime({
       agents: { [agentId]: new GatewayAgent({
-        config, signal, requestId, userId: user.oid, gatewayToken,
+        config, signal, requestId, userId: user.oid, gatewayToken, foundryToken,
         fetchImpl: dependencies.fetchImpl, connectMcp: dependencies.connectMcp,
       }) },
       runner: new InMemoryAgentRunner(),
