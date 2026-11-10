@@ -19,5 +19,6 @@ locals {
 
 locals {
   # Only API Management's identity may call the notes MCP server (external ingress, Entra tokens checked).
+  notes_mcp_checks_caller     = true
   notes_mcp_allowed_caller_id = module.apim_ai_gateway.principal_id
 }

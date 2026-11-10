@@ -1,16 +1,15 @@
 # The notes MCP server (services/notes-mcp, deployed by azd): a team's notes in tables of its own storage account,
-# reached with its managed identity. Who may call it is set in connections.tf (local.notes_mcp_allowed_caller_id):
-# - empty: internal ingress, only apps of the Container Apps environment reach it (e.g. LiteLLM);
-# - an identity's object id (e.g. API Management's): external ingress, and only that identity's Entra tokens for this
-#   server's own app registration are accepted (services/notes-mcp/caller_auth.py).
+# reached with its managed identity. Who may call it is set in connections.tf:
+# - local.notes_mcp_checks_caller = false: internal ingress, only apps of the Container Apps environment reach it
+#   (e.g. LiteLLM);
+# - true, with local.notes_mcp_allowed_caller_id = an identity's object id (e.g. API Management's): external ingress,
+#   and only that identity's Entra tokens for this server's own app registration are accepted
+#   (services/notes-mcp/caller_auth.py). A plain boolean, because it decides what exists (count) and the identity is
+#   often known only after apply.
 
 variable "notes_mcp_image" {
   description = "The image azd deployed (SERVICE_NOTES_MCP_IMAGE_NAME). Empty before the first deployment."
   type        = string
-}
-
-locals {
-  notes_mcp_checks_caller = local.notes_mcp_allowed_caller_id != ""
 }
 
 resource "azuread_application" "notes_mcp" {
@@ -79,4 +78,4 @@ module "notes_mcp" {
 
 # With internal ingress, the URL resolves only inside the Container Apps environment; NOTES_MCP_AUDIENCE is empty then.
 output "NOTES_MCP_URL" { value = "${module.notes_mcp.url}/mcp" }
-output "NOTES_MCP_AUDIENCE" { value = coalesce(one(azuread_application_identifier_uri.notes_mcp[*].identifier_uri), "") }
+output "NOTES_MCP_AUDIENCE" { value = join("", azuread_application_identifier_uri.notes_mcp[*].identifier_uri) }
