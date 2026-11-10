@@ -1,6 +1,7 @@
 # The spike's MCP servers in API Management (azapi: azurerm cannot create MCP APIs): the notes MCP server (which only
 # accepts the gateway's identity) and Microsoft Learn's MCP server, each behind a policy that requires a signed-in
 # user's token for the gateway (policies/mcp-policy.xml.tftpl). Agent 365 discovers and governs them per server.
+# The policies use azurerm, which compares the XML without its formatting: API Management returns it reformatted.
 
 locals {
   apim_mcp_notes_path = "notes"
@@ -41,21 +42,16 @@ resource "azapi_resource" "notes_api" {
   }
 }
 
-resource "azapi_resource" "notes_policy" {
-  type      = "Microsoft.ApiManagement/service/apis/policies@2024-06-01-preview"
-  name      = "policy"
-  parent_id = azapi_resource.notes_api.id
-  body = {
-    properties = {
-      format = "rawxml"
-      value = templatefile("${path.module}/policies/mcp-policy.xml.tftpl", {
-        tenant_id        = data.azurerm_client_config.current.tenant_id
-        client_id        = azuread_application.apim_gateway.client_id
-        scope            = local.apim_gateway_scope
-        backend_audience = coalesce(one(azuread_application_identifier_uri.notes_mcp[*].identifier_uri), "")
-      })
-    }
-  }
+resource "azurerm_api_management_api_policy" "notes_policy" {
+  api_name            = azapi_resource.notes_api.name
+  api_management_name = module.apim_ai_gateway.name
+  resource_group_name = azurerm_resource_group.main.name
+  xml_content = templatefile("${path.module}/policies/mcp-policy.xml.tftpl", {
+    tenant_id        = data.azurerm_client_config.current.tenant_id
+    client_id        = azuread_application.apim_gateway.client_id
+    scope            = local.apim_gateway_scope
+    backend_audience = join("", azuread_application_identifier_uri.notes_mcp[*].identifier_uri)
+  })
 }
 
 resource "azapi_resource" "learn_backend" {
@@ -91,21 +87,16 @@ resource "azapi_resource" "learn_api" {
   }
 }
 
-resource "azapi_resource" "learn_policy" {
-  type      = "Microsoft.ApiManagement/service/apis/policies@2024-06-01-preview"
-  name      = "policy"
-  parent_id = azapi_resource.learn_api.id
-  body = {
-    properties = {
-      format = "rawxml"
-      value = templatefile("${path.module}/policies/mcp-policy.xml.tftpl", {
-        tenant_id        = data.azurerm_client_config.current.tenant_id
-        client_id        = azuread_application.apim_gateway.client_id
-        scope            = local.apim_gateway_scope
-        backend_audience = ""
-      })
-    }
-  }
+resource "azurerm_api_management_api_policy" "learn_policy" {
+  api_name            = azapi_resource.learn_api.name
+  api_management_name = module.apim_ai_gateway.name
+  resource_group_name = azurerm_resource_group.main.name
+  xml_content = templatefile("${path.module}/policies/mcp-policy.xml.tftpl", {
+    tenant_id        = data.azurerm_client_config.current.tenant_id
+    client_id        = azuread_application.apim_gateway.client_id
+    scope            = local.apim_gateway_scope
+    backend_audience = ""
+  })
 }
 
 output "APIM_MCP_NOTES_URL" { value = "${module.apim_ai_gateway.gateway_url}/${local.apim_mcp_notes_path}" }
