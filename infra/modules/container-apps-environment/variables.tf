@@ -24,3 +24,14 @@ variable "subnet_id" {
   type        = string
   default     = null
 }
+
+variable "internal" {
+  description = "True: apps are reachable from the virtual network only, through an internal load balancer (needs subnet_id)."
+  type        = bool
+  default     = false
+
+  validation {
+    condition     = !var.internal || var.subnet_id != null
+    error_message = "An internal environment needs subnet_id."
+  }
+}

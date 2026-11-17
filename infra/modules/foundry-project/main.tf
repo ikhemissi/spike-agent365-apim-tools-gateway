@@ -1,6 +1,6 @@
 # A Microsoft Foundry account (AI Services, key-based access disabled), one project, one chat model deployment, and
 # the project's connection to Application Insights (tracing and evaluations in the Foundry portal). Callers use the
-# model with an Entra identity and the "Foundry User" role on the account. Given a private endpoint subnet, the
+# model with an Entra identity and the "Foundry User" role on the account. Given a private endpoint (subnet and zones), the
 # account also gets a private endpoint (hosted agents inside a virtual network need more, not covered here).
 
 data "azurerm_client_config" "current" {}
@@ -115,11 +115,11 @@ resource "azurerm_role_assignment" "project_traces" {
 }
 
 resource "azurerm_private_endpoint" "main" {
-  count               = var.private_endpoint_subnet_id == null ? 0 : 1
+  count               = var.private_endpoint == null ? 0 : 1
   name                = "pe-${var.account_name}"
   resource_group_name = var.resource_group_name
   location            = var.location
-  subnet_id           = var.private_endpoint_subnet_id
+  subnet_id           = var.private_endpoint.subnet_id
   tags                = var.tags
 
   private_service_connection {
@@ -132,9 +132,9 @@ resource "azurerm_private_endpoint" "main" {
   private_dns_zone_group {
     name = "default"
     private_dns_zone_ids = [
-      var.private_dns_zone_ids["privatelink.cognitiveservices.azure.com"],
-      var.private_dns_zone_ids["privatelink.openai.azure.com"],
-      var.private_dns_zone_ids["privatelink.services.ai.azure.com"],
+      var.private_endpoint.private_dns_zone_ids["privatelink.cognitiveservices.azure.com"],
+      var.private_endpoint.private_dns_zone_ids["privatelink.openai.azure.com"],
+      var.private_endpoint.private_dns_zone_ids["privatelink.services.ai.azure.com"],
     ]
   }
 

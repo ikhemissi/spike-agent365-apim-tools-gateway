@@ -1,11 +1,11 @@
 # A container registry without admin credentials, and the identity that container apps pull images with (AcrPull).
-# Given a private endpoint subnet, the registry also gets a private endpoint (this needs the Premium SKU).
+# Given a private endpoint (subnet and zones), the registry also gets a private endpoint (this needs the Premium SKU).
 
 resource "azurerm_container_registry" "main" {
   name                          = var.name
   resource_group_name           = var.resource_group_name
   location                      = var.location
-  sku                           = var.private_endpoint_subnet_id == null ? "Basic" : "Premium"
+  sku                           = var.private_endpoint == null ? "Basic" : "Premium"
   admin_enabled                 = false
   anonymous_pull_enabled        = false
   public_network_access_enabled = var.public_network_access_enabled
@@ -27,11 +27,11 @@ resource "azurerm_role_assignment" "pull" {
 }
 
 resource "azurerm_private_endpoint" "main" {
-  count               = var.private_endpoint_subnet_id == null ? 0 : 1
+  count               = var.private_endpoint == null ? 0 : 1
   name                = "pe-${var.name}"
   resource_group_name = var.resource_group_name
   location            = var.location
-  subnet_id           = var.private_endpoint_subnet_id
+  subnet_id           = var.private_endpoint.subnet_id
   tags                = var.tags
 
   private_service_connection {
@@ -43,6 +43,6 @@ resource "azurerm_private_endpoint" "main" {
 
   private_dns_zone_group {
     name                 = "default"
-    private_dns_zone_ids = [var.private_dns_zone_ids["privatelink.azurecr.io"]]
+    private_dns_zone_ids = [var.private_endpoint.private_dns_zone_ids["privatelink.azurecr.io"]]
   }
 }

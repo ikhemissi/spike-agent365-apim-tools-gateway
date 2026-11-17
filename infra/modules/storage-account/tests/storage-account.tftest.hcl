@@ -1,4 +1,4 @@
-# Public by default; given a private endpoint subnet, a private endpoint registered in the private DNS zone.
+# Public by default; given a private endpoint, a private endpoint registered in the private DNS zone.
 
 mock_provider "azurerm" {
   mock_data "azurerm_client_config" {
@@ -29,9 +29,11 @@ run "private_endpoint" {
   command = plan
 
   variables {
-    private_endpoint_subnet_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/virtualNetworks/vnet-test/subnets/private-endpoints"
-    private_dns_zone_ids = {
-      "privatelink.table.core.windows.net" = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/privateDnsZones/privatelink.table.core.windows.net"
+    private_endpoint = {
+      subnet_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/virtualNetworks/vnet-test/subnets/private-endpoints"
+      private_dns_zone_ids = {
+        "privatelink.table.core.windows.net" = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/privateDnsZones/privatelink.table.core.windows.net"
+      }
     }
   }
 
