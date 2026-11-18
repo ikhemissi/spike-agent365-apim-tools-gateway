@@ -1,4 +1,4 @@
-# A storage account reached only with Entra ID (shared keys disabled). Given a private endpoint subnet, it gets one
+# A storage account reached only with Entra ID (shared keys disabled). Given a private endpoint (subnet and zones), it gets one
 # private endpoint per listed service (blob, table, queue, file).
 
 resource "azurerm_storage_account" "main" {
@@ -15,11 +15,11 @@ resource "azurerm_storage_account" "main" {
 }
 
 resource "azurerm_private_endpoint" "main" {
-  for_each            = var.private_endpoint_subnet_id == null ? toset([]) : toset(var.private_endpoint_services)
+  for_each            = var.private_endpoint == null ? toset([]) : toset(var.private_endpoint_services)
   name                = "pe-${var.name}-${each.value}"
   resource_group_name = var.resource_group_name
   location            = var.location
-  subnet_id           = var.private_endpoint_subnet_id
+  subnet_id           = var.private_endpoint.subnet_id
   tags                = var.tags
 
   private_service_connection {
@@ -31,6 +31,6 @@ resource "azurerm_private_endpoint" "main" {
 
   private_dns_zone_group {
     name                 = "default"
-    private_dns_zone_ids = [var.private_dns_zone_ids["privatelink.${each.value}.core.windows.net"]]
+    private_dns_zone_ids = [var.private_endpoint.private_dns_zone_ids["privatelink.${each.value}.core.windows.net"]]
   }
 }

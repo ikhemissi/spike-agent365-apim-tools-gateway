@@ -22,14 +22,13 @@ variable "public_network_access_enabled" {
   default     = true
 }
 
-variable "private_endpoint_subnet_id" {
-  description = "Subnet for a private endpoint. Null: none."
-  type        = string
-  default     = null
-}
-
-variable "private_dns_zone_ids" {
-  description = "Private DNS zone ids by zone name (the network module's output); privatelink.azurecr.io is used."
-  type        = map(string)
-  default     = {}
+variable "private_endpoint" {
+  description = "Private endpoint: its subnet, and the private DNS zone ids by zone name (the network module's output; privatelink.azurecr.io is used). Null: none."
+  # An object rather than a subnet id: whether there is one stays known at plan time, also when the subnet is created
+  # in the same plan (count on a subnet id that is not known yet fails with "Invalid count argument").
+  type = object({
+    subnet_id            = string
+    private_dns_zone_ids = map(string)
+  })
+  default = null
 }

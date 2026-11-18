@@ -1,8 +1,8 @@
 {
   "composition": "spike",
   "source": {
-    "commit": "f2bb8de1468664a4531532da57d44e4075916639",
-    "describe": "v0.2.0-70-gf2bb8de",
+    "commit": "b23cdbf15f043f6a1768c5cde92fab47dd8173d1",
+    "describe": "v0.3.0-58-gb23cdbf",
     "dirty": false
   },
   "generated_at": "2026-11-03T13:23:44+00:00",

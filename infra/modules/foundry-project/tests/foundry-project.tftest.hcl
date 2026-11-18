@@ -1,4 +1,4 @@
-# Public by default; given a private endpoint subnet, a private endpoint registered in the private DNS zone.
+# Public by default; given a private endpoint, a private endpoint registered in the private DNS zone.
 
 mock_provider "azapi" {}
 
@@ -38,11 +38,13 @@ run "private_endpoint" {
   command = plan
 
   variables {
-    private_endpoint_subnet_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/virtualNetworks/vnet-test/subnets/private-endpoints"
-    private_dns_zone_ids = {
-      "privatelink.cognitiveservices.azure.com" = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/privateDnsZones/privatelink.cognitiveservices.azure.com"
-      "privatelink.openai.azure.com"            = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/privateDnsZones/privatelink.openai.azure.com"
-      "privatelink.services.ai.azure.com"       = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/privateDnsZones/privatelink.services.ai.azure.com"
+    private_endpoint = {
+      subnet_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/virtualNetworks/vnet-test/subnets/private-endpoints"
+      private_dns_zone_ids = {
+        "privatelink.cognitiveservices.azure.com" = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/privateDnsZones/privatelink.cognitiveservices.azure.com"
+        "privatelink.openai.azure.com"            = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/privateDnsZones/privatelink.openai.azure.com"
+        "privatelink.services.ai.azure.com"       = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/privateDnsZones/privatelink.services.ai.azure.com"
+      }
     }
   }
 

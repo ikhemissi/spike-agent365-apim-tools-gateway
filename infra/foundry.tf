@@ -30,8 +30,7 @@ module "foundry" {
   tags                                   = local.tags
   application_insights_id                = module.monitoring.application_insights_id
   application_insights_connection_string = module.monitoring.application_insights_connection_string
-  private_endpoint_subnet_id             = lookup(local.network.subnet_ids, "private-endpoints", null)
-  private_dns_zone_ids                   = local.network.private_dns_zone_ids
+  private_endpoint                       = local.private_endpoint
 
   model = {
     name     = var.model_name

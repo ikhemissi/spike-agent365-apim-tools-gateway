@@ -1,6 +1,7 @@
 # A Container Apps environment (Consumption workload profile) whose logs go to Log Analytics through a diagnostic
 # setting: no Log Analytics shared key involved. Given a subnet (delegated to Microsoft.App/environments, /27 or
-# larger), the environment joins that virtual network.
+# larger), the environment joins that virtual network; internal, its apps are reachable from that network only, at its
+# static IP address.
 
 resource "azurerm_container_app_environment" "main" {
   name                     = var.name
@@ -8,7 +9,9 @@ resource "azurerm_container_app_environment" "main" {
   location                 = var.location
   logs_destination         = "azure-monitor"
   infrastructure_subnet_id = var.subnet_id
-  tags                     = var.tags
+  # Set only when true: the provider rejects the argument, even false, without a subnet.
+  internal_load_balancer_enabled = var.internal ? true : null
+  tags                           = var.tags
 
   workload_profile {
     name                  = "Consumption"
